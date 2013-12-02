@@ -57,7 +57,7 @@ int main(void) {
     
     char buff[256] = {'\0'};
     
-    t2fs_seek (file, 2);
+    t2fs_seek (file, 5);
     
     t2fs_read (file, buff, 220);
     

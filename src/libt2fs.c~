@@ -97,51 +97,19 @@ return 0;
 int 
 t2fs_delete (char *nome) {
 
-    char blockData [controlBlock.blockSize];
+    t2fs_find findStruct;
+    t2fs_record rec;
     
-    unsigned int startBlock = controlBlock.ctrlSize + controlBlock.freeBlockSize;
-    
-    unsigned int qtdBlock = controlBlock.rootSize + startBlock;
-    
-    unsigned int qtdRec = (int) controlBlock.blockSize/controlBlock.fileEntrySize;
+    if(!t2fs_first (&findStruct)) { // inicializa estrutura de procura de arquivos
+        while (!t2fs_next(&findStruct, &rec)) { // procura o por registros válidos
+            if (strncmp (nome,(char*) rec.name, MAX_NAME_SIZE) == 0) { // compara o nome para saber se é o mesmo
+                
 
-    unsigned int found = 0;
- 
-    int i;
-    
-    t2fs_record *rec;
-
-    while ((startBlock < qtdBlock) && (!found)) {
-        read_block (startBlock, blockData);
-        
-        i = 0;
-        while ((i < qtdRec) && (!found)) {
-            rec = blockData + i*controlBlock.fileEntrySize;
-            rec->name[0] &= 0x7F; // remove bit de validade
-            
-            if (strncpy (rec->name, nome, MAX_NAME_SIZE) == 0) {
-                // desmarcar bits
-                int j = 0;
-                int k = 0;
-                unsigned int blockAddr = rec->dataPtr[0];
-                while (blockAddr != 0) {
-                
-                
-                
                 }
-                
-                
-                found = !found;
             }
-            else
-                i++;
         }
-        if (!found)
-            startBlock++;     
     }
-
-    if (found) {    
-    }
+    
 
     
     
