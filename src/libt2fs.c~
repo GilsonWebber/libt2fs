@@ -94,6 +94,35 @@ t2fs_write (t2fs_file handle, char *buffer, int size) {
 return 0;
 }
 
+int 
+t2fs_delete (char *nome) {
+
+    t2fs_find findStruct;
+    t2fs_record rec;
+    
+    if(!t2fs_first (&findStruct)) { // inicializa estrutura de procura de arquivos
+        while (!t2fs_next(&findStruct, &rec)) { // procura o por registros válidos
+            if (strncmp (nome,(char*) rec.name, MAX_NAME_SIZE) == 0) { // compara o nome para saber se é o mesmo
+                
+
+                }
+            }
+        }
+    }
+    
+
+    
+    
+    
+    /* 
+     * desmarcar blocos no bitmap
+     * alterar nome da estrutura
+     * salvar no disco
+     */
+     
+     return 0;
+}
+
 /***************** TERMINADAS - FUNCIONANDO ***********************/
 
 
@@ -168,7 +197,6 @@ t2fs_open (char *nome) {
 
     t2fs_find findStruct;
     t2fs_record rec;
-    
     
     if(!t2fs_first (&findStruct)) { // inicializa estrutura de procura de arquivos
         while (!t2fs_next(&findStruct, &rec)) { // procura o por registros válidos
@@ -436,113 +464,5 @@ t2fs_read (t2fs_file handle, char *buffer, int size) {
     file->currentPointer += size;
     return result;
 }
-
-
-
-int 
-t2fs_delete (char *nome) {
-
-    /* Localiza registro do arquivo */
-
-    t2fs_find findStruct;
-    
-    if(!t2fs_first (&findStruct)) { // inicializa estrutura de procura de arquivos
-    
-        t2fs_record rec;
-
-        int index;
-        unsigned int block;
-        
-        index = findStruct.index;
-        block = findStruct.block;
-
-        while (!t2fs_next(&findStruct, &rec)) { // procura por registros válidos
-            if (strncmp (nome,(char*) rec.name, MAX_NAME_SIZE) == 0) { // compara o nome para saber se é o mesmo
-                /* executar ação de arquivo existe */                
-                if (rec.dataPtr[0] != 0) {
-                    
-                    unsigned int startBlock = controlBlock.ctrlSize;
-                    unsigned int endBlock = controlBlock.freeBlockSize + startBlock;                                        
-                    
-                    unsigned char freeBlockData[controlBlock.blockSize*controlBlock.freeBlockSize];
-                    
-                    int i = 0;
-                    
-                    /* Lê do disco o bloco com o mapa de bits de blocos */
-                    while (startBlock < endBlock) {
-                        read_block (startBlock, (char*) freeBlockData + (i*controlBlock.blockSize));
-                        i++;
-                        startBlock++;
-                    }
-                    
-                    freeBlockData[rec.dataPtr[0] / 8] &= ~(0x80 >> (rec.dataPtr[1] % 8)); 
-                    
-                    if (rec.dataPtr[1] != 0) {
-                        freeBlockData[rec.dataPtr[1] / 8] &= ~(0x80 >> (rec.dataPtr[1] % 8)); 
-                        
-                        if (rec.singleIndPtr != 0) {
-                            unsigned int singIndPtrBlock [(controlBlock.blockSize/4) + 1];
-                            read_block (rec.singleIndPtr, (char*) singIndPtrBlock);
-
-                            singIndPtrBlock[(controlBlock.blockSize/4)] = 0;
-                            
-                            i = 0;                                                        
-                            while (singIndPtrBlock[i] != 0) {
-                                freeBlockData[singIndPtrBlock[i] / 8] &= ~(0x80 >> (singIndPtrBlock[i] % 8));
-                                i++;                           
-                            }
-                            
-                            if (rec.doubleIndPtr != 0) {
-                                read_block (rec.doubleIndPtr, (char*) singIndPtrBlock);
-                                
-                                unsigned int doubleIndPtrBlock [(controlBlock.blockSize/4) + 1];
-                                doubleIndPtrBlock[(controlBlock.blockSize/4)] = 0;
-                                
-                                i = 0;
-                                int j;
-                                while (singIndPtrBlock[i] != 0) {
-                                    read_block (rec.doubleIndPtr, (char*) doubleIndPtrBlock);
-                                    
-                                    j = 0;
-                                    while (singIndPtrBlock[j] != 0) {
-                                        freeBlockData[singIndPtrBlock[j] / 8] &= ~(0x80 >> (singIndPtrBlock[j] % 8));
-                                        j++;                           
-                                    }
-                                    i++;                               
-                                }
-                            }
-                        }                        
-                    }
-                    // Gravar bloco com bitmap de livres
-                    startBlock = controlBlock.ctrlSize;
-                    
-                    i = 0;
-                    while (startBlock < endBlock) {
-                        write_block (startBlock, (char*) freeBlockData + (i*controlBlock.blockSize));
-                        i++;
-                        startBlock++;
-                    }
-                    
-                    
-                                    
-                }
-                
-                // Altera nome da entrada e grava no disco
-                unsigned char dirBlock[controlBlock.blockSize];
-                read_block (block, (char*) dirBlock);
-                memcpy (dirBlock + (index*controlBlock.fileEntrySize), &rec, controlBlock.fileEntrySize);
-                write_block (block, (char*) dirBlock); 
-                return 0;
-            }
-            else {
-                /* Salva os dados do próximo indice válido que será lido */
-                index = findStruct.index;
-                block = findStruct.block;
-            }
-        }
-    }
-     return -1;
-}
-
 
 
