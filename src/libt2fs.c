@@ -83,6 +83,7 @@ fileHandle(const unsigned int action, const t2fs_file handle) // retorna um pont
 }
 
 
+// variável com os dados do disco
 t2fs_control controlBlock;
 
 /**************************** FUNCIONANDO **************************/
@@ -90,8 +91,120 @@ t2fs_control controlBlock;
 
 int 
 t2fs_write (t2fs_file handle, char *buffer, int size) {
+	
+	if (size > 0) {
+        
+        // Gerencia o bitmap com os blocos do disco
+        int __free_block_manager__ (unsigned int block, eAction action);
+        
+        INIT ();
+        
+		unsigned int toWrite = size;
+		
+        typedef enum eAction {CHECK, UNCHECK, WRITE, GET_FREE};
+        
+        // testar erros
+        t2fs_handle *file = fileHandle(GET_HANDLE, handle);
+        
+        unsigned int currentIndex = file->currentPointer % controlBlock.blockSize;
+        unsigned int currentBlock = (int) file->currentPointer / controlBlock.blockSize;
+        
+        if (currentBlock == 0) { // primeiro ponteiro direto
+        
+        }
+        
+        if (currentBlock == 1) { //segundo ponteiro direto
+        
+        }
+        
+        if (curretnBlock > 1
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+		int // Gerencia o bitmap com os blocos do disco
+		__free_block_manager__ (unsigned int block, eAction action) {
+			static unsigned char blockData [controlBlock.blockSize];
+			typedef enum {LOADED, UNLOADED} eState;
+			
+			static eState state = UNLOADED;
+ 			
+            // Lê o bloco com o bitmap caso este já não esteja na memória
+			if (state == UNLOADED) {
+				read_block (controlBlock.ctrlSize, blockData);
+                state = LOADED;
+			}
+            
+            // Aplica ação desejada
+            switch (action) {
+                case CHECK: // marca um bloco como ocupado
+                    blockData[(int) block/8] |= (1 >> (block%8));
+                    break;
+                case UNCHECK: // marca um bloco como livre
+                    blockData[(int) block/8] &= ~(1 >> (block%8));
+                    break;
+                case WRITE: // grava o bitmap no disco
+                    white_block (controlBlock.ctrlSize, blockData);
+                    break;
+                case GET_FREE: // procura pelo bloco livre mais próximo ao atual fornecido
+                {
+                    int low = (int) (ctrlSize + freeBlockSize + rootSize)/8;
+                    int high = (int) diskSize/8;
+                    
+                    int i_high;
+                    if (block < low)
+                        i_high = low/8;
+                    else
+                        i_high = (int) block/8;
+                        
+                    int i_low = i_high - 1;
+                    
+                    while (1)                    
+                        if (i_high < high) {
+                            if (dataBlock[i_high] != 0xFF){
+                                int index = 0;                               
+                                while (((dataBlock[i_high] << index) & 0x80) == 0) index ++;
+                                return (index + i_high*8);
+                            }
+                            i_high++;
+                        }
+                        
+                        if ( i_low > low) {
+                            if (dataBlock[i_low] != 0xFF){
+                                int index = 0;                               
+                                while (((dataBlock[i_low] >> index) & 0x01) == 0) index ++;
+                                return (index + i_low*8);
+                            }                        
+                            i_low--;
+                        }
+                        
+                        if (( i_low < low) && (i_high > high))
+                            return -1;
+                    }
+                }
+                default
+                    return -1;
+            }
+                
+		}
+        
+	
+	
+	}
 
-return 0;
+	
+	
+	return 0;
 }
 
 /***************** TERMINADAS - FUNCIONANDO ***********************/
@@ -543,6 +656,8 @@ t2fs_delete (char *nome) {
     }
      return -1;
 }
+
+
 
 
 
